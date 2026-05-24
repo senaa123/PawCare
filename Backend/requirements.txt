@@ -1,0 +1,7 @@
+websockets 
+aiofiles
+fastapi 
+uvicorn 
+python-multipart 
+pydantic 
+sqlalchemy

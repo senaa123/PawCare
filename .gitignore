@@ -1,0 +1,9 @@
+# Enviroments
+.venv
+.tf_venv
+
+# Models training data
+models/
+
+#env
+.env
