@@ -3,7 +3,13 @@
 .tf_venv
 
 # Models training data
-models/
+models/cat_activity/
+models/cat_det/
+models/cat_rec/
+models/cat_sound/
 
 #env
 .env
+
+#cache
+__pycache__/
