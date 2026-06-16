@@ -40,7 +40,7 @@ numpy==1.26.4
 opencv-python-headless==4.9.0.80
 Pillow==10.3.0
 scikit-learn==1.4.2
-tflite-runtime==2.14.0     # YAMNet
+#tflite-runtime==2.14.0     # YAMNet
 
 # Scheduling
 apscheduler==3.10.4
