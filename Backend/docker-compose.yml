@@ -1,15 +1,17 @@
+# docker-compose.yml — FULL UPDATED FILE
+
 version: "3.9"
 
 services:
   backend:
-    build: ./backend
+    build: .              # ← FIXED: was ./backend, now . (current dir)
     container_name: pawcare_backend
     ports:
       - "8000:8000"
     env_file:
-      - ./backend/.env
+      - .env
     volumes:
-      - ./backend:/app
+      - .:/app
     depends_on:
       db:
         condition: service_healthy

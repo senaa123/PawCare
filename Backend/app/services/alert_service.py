@@ -20,6 +20,16 @@ class AlertService:
         return await self.repo.get_by_user(user_id, unread_only=unread_only)
 
     async def create_alert(self, data: AlertCreate, user_id: uuid.UUID) -> Alert:
+        # Verify that the cat exists and is owned by the user
+        from app.database.repositories.cat_repository import CatRepository
+        cat_repo = CatRepository(self.repo.session)
+        cat = await cat_repo.get_by_id_and_owner(data.cat_id, user_id)
+        if not cat:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cat not found or does not belong to you."
+            )
+
         alert = Alert(user_id=user_id, **data.model_dump())
         return await self.repo.create(alert)
 

@@ -1,3 +1,5 @@
+# app/main.py — FULL UPDATED FILE
+
 import logging
 from contextlib import asynccontextmanager
 
@@ -6,18 +8,23 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.connection import init_db, close_db
-from app.api.routes import auth, cats, alerts, camera, audio, automation
+from app.api.routes import auth, cats, alerts, camera, audio, automation, streams
 from app.events.event_bus import event_bus
+from app.events.handlers import register_all_handlers
+from app.automation.event_processor import register_automation_handlers
+from app.utils.logging import configure_logging
 
+configure_logging(debug=settings.DEBUG)
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Manage startup and shutdown lifecycle."""
     logger.info("PawCare backend starting up...")
     await init_db()
     await event_bus.start()
+    register_all_handlers()        # ws + alert handlers
+    register_automation_handlers() # rules engine handlers
     yield
     logger.info("PawCare backend shutting down...")
     await event_bus.stop()
@@ -34,7 +41,6 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
-    # CORS
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
@@ -43,17 +49,21 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Routers
     app.include_router(auth.router,       prefix="/api/v1/auth",       tags=["Auth"])
     app.include_router(cats.router,       prefix="/api/v1/cats",       tags=["Cats"])
     app.include_router(alerts.router,     prefix="/api/v1/alerts",     tags=["Alerts"])
     app.include_router(camera.router,     prefix="/api/v1/camera",     tags=["Camera"])
     app.include_router(audio.router,      prefix="/api/v1/audio",      tags=["Audio"])
     app.include_router(automation.router, prefix="/api/v1/automation", tags=["Automation"])
+    app.include_router(streams.router,    prefix="/api/v1/streams",    tags=["Streams"])
 
     @app.get("/health", tags=["Health"])
     async def health_check():
-        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+        return {
+            "status": "ok",
+            "app": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+        }
 
     return app
 

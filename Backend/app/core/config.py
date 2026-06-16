@@ -1,6 +1,10 @@
+# app/core/config.py — FULL UPDATED FILE
+
 from functools import lru_cache
 from typing import List
+import json
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,6 +35,15 @@ class Settings(BaseSettings):
     YOLO_MODEL_PATH: str = "app/ai/models/yolov8n.pt"
     FACE_MODEL_PATH: str = "app/ai/models/face_recognition.pkl"
     YAMNET_MODEL_PATH: str = "app/ai/models/yamnet.tflite"
+
+    @field_validator("ALLOWED_ORIGINS", mode="before")
+    @classmethod
+    def parse_origins(cls, v):
+        if isinstance(v, str):
+            if v.startswith("["):
+                return json.loads(v)
+            return [origin.strip() for origin in v.split(",")]
+        return v
 
 
 @lru_cache
