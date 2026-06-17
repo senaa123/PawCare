@@ -10,6 +10,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
 
 from app.websocket.socket_manager import socket_manager
 from app.ai.vision.inference import process_frame
+from app.ai.behavior.session_tracker import session_tracker
 from app.api.dependencies import CurrentUser
 from app.core.security import decode_access_token
 
@@ -94,6 +95,8 @@ async def camera_stream_ws(
 
     except WebSocketDisconnect:
         socket_manager.disconnect(user_id, websocket)
+        import asyncio
+        asyncio.create_task(session_tracker.close_all_for_user(user_id))
         logger.info(f"Camera WebSocket closed for user: {user_id}")
 
 
