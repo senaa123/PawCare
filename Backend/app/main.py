@@ -8,11 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.database.connection import init_db, close_db
-from app.api.routes import auth, cats, alerts, camera, audio, automation, streams
+from app.api.routes import auth, cats, alerts, camera, audio, automation, streams, detections, dashboard_ws, analytics
 from app.events.event_bus import event_bus
 from app.events.handlers import register_all_handlers
 from app.automation.event_processor import register_automation_handlers
 from app.utils.logging import configure_logging
+
 
 configure_logging(debug=settings.DEBUG)
 logger = logging.getLogger(__name__)
@@ -56,7 +57,10 @@ def create_app() -> FastAPI:
     app.include_router(audio.router,      prefix="/api/v1/audio",      tags=["Audio"])
     app.include_router(automation.router, prefix="/api/v1/automation", tags=["Automation"])
     app.include_router(streams.router,    prefix="/api/v1/streams",    tags=["Streams"])
-
+    app.include_router(detections.router, prefix="/api/v1/detections", tags=["detections"])
+    app.include_router(dashboard_ws.router, prefix="/api/v1/dashboard", tags=["dashboard"])
+    app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
+    
     @app.get("/health", tags=["Health"])
     async def health_check():
         return {

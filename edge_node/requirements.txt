@@ -1,0 +1,37 @@
+# ==============================================================================
+# PawCare — Edge Node
+# Python 3.11+ | Local camera AI worker
+#
+# Setup (run in order):
+#   python -m venv venv
+#   venv\Scripts\activate
+#   pip install -r requirements.txt
+# ==============================================================================
+
+
+# ── PyTorch (CUDA 12.1 — RTX 4060) ───────────────────────────────────────────
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.3.0+cu121
+torchvision==0.18.0+cu121
+
+
+# ── Camera ─────────────────────────────────────────────────────────────────────
+# Full build — NOT headless. Headless removes cv2.imshow() which --show needs.
+opencv-python==4.9.0.80
+
+
+# ── YOLO detection + tracking ──────────────────────────────────────────────────
+ultralytics==8.2.18
+
+
+# ── Face matching ──────────────────────────────────────────────────────────────
+Pillow==10.3.0
+numpy==1.26.4
+
+
+# ── Roboflow behavior model ────────────────────────────────────────────────────
+inference==0.45.1
+
+
+# ── HTTP to backend ────────────────────────────────────────────────────────────
+requests==2.32.3

@@ -18,6 +18,7 @@ const schema = z.object({
   notes:     z.string().optional(),
 });
 type FormData = z.infer<typeof schema>;
+type FormInput = z.input<typeof schema>;
 
 interface Props {
   open:     boolean;
@@ -28,8 +29,8 @@ interface Props {
 export default function AddCatModal({ open, onClose, editing }: Props) {
   const qc = useQueryClient();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema) as any,
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormInput, unknown, FormData>({
+    resolver: zodResolver(schema),
   });
 
   // Pre-fill form when editing
