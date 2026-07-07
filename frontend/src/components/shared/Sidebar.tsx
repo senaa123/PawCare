@@ -1,87 +1,118 @@
-"use client";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard, Video, Cat, Bell,
-  BarChart2, Zap, Camera, LogOut, ChevronRight,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
+// src/components/shared/Sidebar.tsx — CHANGED
+// What changed:
+//   + useSidebarStore (Zustand) for open/close state
+//   + hamburger button exported for TopBar to use
+//   + backdrop overlay closes drawer on tap
+//   + sidebar uses translate-x-0 / -translate-x-full for mobile drawer
 
-const navItems = [
-  { href: "/dashboard",   label: "Dashboard",       icon: LayoutDashboard },
-  { href: "/monitoring",  label: "Live Monitoring",  icon: Video },
-  { href: "/cats",        label: "My Cats",          icon: Cat },
-  { href: "/alerts",      label: "Alerts",           icon: Bell },
-  { href: "/analytics",   label: "Analytics",        icon: BarChart2 },
-  { href: "/automation",  label: "Automation",       icon: Zap },
-  { href: "/streams",     label: "Cameras",          icon: Camera },
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { X } from 'lucide-react';
+import { create } from 'zustand';
+import { useAuthStore } from '@/store/authStore';
+
+// ── tiny Zustand store for sidebar open state ──────────────────────────────────
+interface SidebarStore { isOpen: boolean; open: () => void; close: () => void; toggle: () => void; }
+export const useSidebarStore = create<SidebarStore>((set) => ({
+  isOpen: false,
+  open:   () => set({ isOpen: true }),
+  close:  () => set({ isOpen: false }),
+  toggle: () => set((s) => ({ isOpen: !s.isOpen })),
+}));
+
+const NAV = [
+  { label: 'Dashboard',      href: '/dashboard'  },
+  { label: 'Live Monitor',   href: '/monitoring' },
+  { label: 'My Cats',        href: '/cats'       },
+  { label: 'Camera Streams', href: '/streams'    },
+  { label: 'Alerts',         href: '/alerts'     },
+  { label: 'Analytics',      href: '/analytics'  },
+  { label: 'Automation',     href: '/automation' },
 ];
 
-export default function Sidebar() {
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
+export function Sidebar() {
+  const pathname  = usePathname();
+  const router    = useRouter();
+  const { user, logout }    = useAuthStore();
+  const { isOpen, close }   = useSidebarStore();
 
-  return (
-    <aside className="hidden md:flex flex-col w-64 min-h-screen bg-white shadow-nav border-r border-border flex-shrink-0">
-      {/* Brand */}
-      <div className="px-6 py-5 border-b border-border">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">🐾</span>
-          <span className="font-display text-lg font-bold text-text">PawCare</span>
-        </div>
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      {/* Logo + mobile close button */}
+      <div className="h-16 px-5 flex items-center justify-between border-b border-gray-100 shrink-0">
+        <span className="font-bold text-lg text-blue-600">PawCare</span>
+        {/* X button — only visible on mobile */}
+        <button onClick={close} className="lg:hidden text-gray-400 hover:text-gray-700">
+          <X size={20} />
+        </button>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium transition-all duration-150 group",
-                active
-                  ? "bg-pawblue-light text-pawblue-dark"
-                  : "text-text-muted hover:bg-muted hover:text-text"
-              )}
-            >
-              <Icon
-                size={18}
-                className={cn(
-                  "flex-shrink-0 transition-colors",
-                  active ? "text-pawblue-dark" : "text-text-light group-hover:text-text-muted"
-                )}
-              />
-              <span className="flex-1">{label}</span>
-              {active && <ChevronRight size={14} className="text-pawblue-dark opacity-60" />}
-            </Link>
-          );
-        })}
+      {/* Nav links */}
+      <nav className="flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
+        {NAV.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={close}   // close drawer on mobile after navigating
+            className={`text-sm px-3 py-2 rounded-lg transition-colors ${
+              pathname === item.href
+                ? 'bg-blue-50 text-blue-700 font-medium'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            }`}
+          >
+            {item.label}
+          </Link>
+        ))}
       </nav>
 
-      {/* User + logout */}
-      <div className="px-3 pb-4 border-t border-border pt-4">
-        {user && (
-          <div className="flex items-center gap-3 px-3 py-2 rounded-2xl mb-2">
-            <div className="w-8 h-8 rounded-full bg-pawblue flex items-center justify-center text-xs font-bold text-pawblue-dark flex-shrink-0">
-              {user.full_name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-text truncate">{user.full_name}</p>
-              <p className="text-xs text-text-light truncate">{user.email}</p>
-            </div>
+      {/* User info + logout */}
+      <div className="p-4 border-t border-gray-100 shrink-0">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {user?.full_name?.[0]?.toUpperCase() ?? '?'}
           </div>
-        )}
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{user?.full_name}</p>
+            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+          </div>
+        </div>
         <button
-          onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-medium text-text-muted hover:bg-red-50 hover:text-red-500 w-full transition-all duration-150"
+          onClick={() => { logout(); router.push('/login'); close(); }}
+          className="text-sm text-gray-400 hover:text-red-600 transition-colors"
         >
-          <LogOut size={18} />
           Sign out
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* ── Desktop sidebar — always visible on lg+ ── */}
+      <aside className="hidden lg:flex w-60 shrink-0 bg-white border-r border-gray-100 flex-col">
+        {sidebarContent}
+      </aside>
+
+      {/* ── Mobile drawer ── */}
+      {/* Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden"
+          onClick={close}
+        />
+      )}
+
+      {/* Drawer panel */}
+      <aside className={`
+        fixed top-0 left-0 h-full w-72 bg-white z-50
+        transform transition-transform duration-300 ease-in-out
+        lg:hidden
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

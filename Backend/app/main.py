@@ -5,6 +5,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from app.core.limiter import limiter
 
 from app.core.config import settings
 from app.database.connection import init_db, close_db
@@ -13,6 +17,7 @@ from app.events.event_bus import event_bus
 from app.events.handlers import register_all_handlers
 from app.automation.event_processor import register_automation_handlers
 from app.utils.logging import configure_logging
+from app.services.scheduler import start_scheduler, stop_scheduler
 
 
 configure_logging(debug=settings.DEBUG)
@@ -26,8 +31,10 @@ async def lifespan(app: FastAPI):
     await event_bus.start()
     register_all_handlers()        # ws + alert handlers
     register_automation_handlers() # rules engine handlers
+    start_scheduler()              # start the anomaly check scheduler
     yield
     logger.info("PawCare backend shutting down...")
+    stop_scheduler()
     await event_bus.stop()
     await close_db()
 
@@ -42,6 +49,9 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.ALLOWED_ORIGINS,
@@ -49,6 +59,8 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
     app.include_router(auth.router,       prefix="/api/v1/auth",       tags=["Auth"])
     app.include_router(cats.router,       prefix="/api/v1/cats",       tags=["Cats"])

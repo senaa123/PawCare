@@ -1,38 +1,38 @@
-"use client";
-import { Bell } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+// src/components/shared/TopBar.tsx — CHANGED
+// What changed: hamburger Menu icon added on left for mobile only
 
-interface TopBarProps {
-  title: string;
-  subtitle?: string;
-}
+'use client';
 
-export default function TopBar({ title, subtitle }: TopBarProps) {
-  const { user } = useAuth();
+import { Menu, Bell } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { useSidebarStore } from './Sidebar';
+
+export function TopBar() {
+  const { user }   = useAuthStore();
+  const { toggle } = useSidebarStore();
 
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-sm border-b border-border px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-xl font-bold text-text">{title}</h1>
-          {subtitle && <p className="text-sm text-text-muted mt-0.5">{subtitle}</p>}
-        </div>
+    <header className="h-16 bg-white border-b border-gray-100 flex items-center px-4 gap-3 shrink-0">
 
-        <div className="flex items-center gap-3">
-          {/* Notifications bell */}
-          <button className="relative p-2 rounded-2xl hover:bg-pawblue-light transition-colors">
-            <Bell size={20} className="text-text-muted" />
-            {/* Unread dot */}
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-400 rounded-full" />
-          </button>
+      {/* Hamburger — mobile only */}
+      <button
+        onClick={toggle}
+        className="lg:hidden text-gray-500 hover:text-gray-800 p-1"
+        aria-label="Open menu"
+      >
+        <Menu size={22} />
+      </button>
 
-          {/* Avatar */}
-          {user && (
-            <div className="w-9 h-9 rounded-full bg-pawblue flex items-center justify-center text-sm font-bold text-pawblue-dark cursor-pointer">
-              {user.full_name.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Right side icons */}
+      <button className="text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-50">
+        <Bell size={20} />
+      </button>
+
+      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+        {user?.full_name?.[0]?.toUpperCase() ?? '?'}
       </div>
     </header>
   );

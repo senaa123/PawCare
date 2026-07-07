@@ -3,9 +3,10 @@ import logging
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
+from app.core.limiter import limiter
 from app.api.dependencies import CurrentUser
 from app.events.event_bus import event_bus
 from app.events.event_types import DomainEvent, EventType
@@ -28,7 +29,8 @@ class DetectionIngest(BaseModel):
 
 
 @router.post("/ingest", status_code=202)
-async def ingest_detection(data: DetectionIngest, current_user: CurrentUser):
+@limiter.limit("60/minute")
+async def ingest_detection(request: Request, data: DetectionIngest, current_user: CurrentUser):
     """
     Receive compact events from the edge AI worker.
 

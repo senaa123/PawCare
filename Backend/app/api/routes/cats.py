@@ -5,6 +5,7 @@
 import asyncio
 import json
 import uuid
+import shutil
 from pathlib import Path
 from typing import List
 
@@ -21,6 +22,8 @@ router = APIRouter()
 
 EMBEDDINGS_DIR = Path("app/ai/models/embeddings")
 EMBEDDINGS_DIR.mkdir(parents=True, exist_ok=True)
+PROFILE_IMAGES_DIR = Path("app/static/cat_images")
+PROFILE_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ── existing endpoints (unchanged) ────────────────────────────────────────────
@@ -180,3 +183,41 @@ async def cat_detection_history(
         }
         for e in events
     ]
+
+# Image upload for cat profile
+@router.post("/{cat_id}/upload-image", status_code=200)
+async def upload_cat_image(
+    cat_id: uuid.UUID,
+    current_user: CurrentUser,
+    session: DBSession,
+    image: UploadFile = File(...),
+):
+    """
+    Uploads a profile photo for a cat.
+    Saves it to disk, updates Cat.profile_image_url.
+    """
+    cat = await session.scalar(
+        select(Cat).where(Cat.id == cat_id, Cat.owner_id == current_user.id)
+    )
+    if not cat:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Cat not found.")
+
+    # Validate file type
+    if not image.content_type.startswith("image/"):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="File must be an image.")
+
+    # Save to disk
+    suffix   = Path(image.filename).suffix or ".jpg"
+    filename = f"{cat_id}{suffix}"
+    dest     = PROFILE_IMAGES_DIR / filename
+
+    with dest.open("wb") as f:
+        shutil.copyfileobj(image.file, f)
+
+    # Update DB
+    image_url = f"/static/cat_images/{filename}"
+    async with session.begin():
+        cat.profile_image_url = image_url
+
+    return {"profile_image_url": image_url}

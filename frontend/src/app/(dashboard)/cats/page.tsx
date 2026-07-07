@@ -1,8 +1,3 @@
-// src/app/(dashboard)/cats/page.tsx — CHANGED
-// What changed:
-//   + EnrollModal component
-//   + "Enroll Face" button on each CatCard
-//   + enrollCat API call
 'use client';
 
 import { useState } from 'react';
@@ -14,9 +9,10 @@ import AddCatModal from '@/components/cats/AddCatModal';
 import { useToast } from '@/components/ui/Toast';
 
 // ── API calls ──────────────────────────────────────────────────────────────────
-const fetchCats  = () => api.get<Cat[]>('/cats/').then((r: { data: Cat[] }) => r.data);
-const deleteCat  = (id: string) => api.delete(`/cats/${id}`);
-const enrollFace = (catId: string, files: File[]) => {
+const fetchCats   = () => api.get<Cat[]>('/cats/').then((r: { data: Cat[] }) => r.data);
+const deleteCat   = (id: string) => api.delete(`/cats/${id}`);
+
+const enrollFace  = (catId: string, files: File[]) => {
   const form = new FormData();
   files.forEach(f => form.append('photos', f));
   return api.post(`/cats/${catId}/enroll`, form, {
@@ -24,11 +20,63 @@ const enrollFace = (catId: string, files: File[]) => {
   });
 };
 
-// ── Enroll Modal ───────────────────────────────────────────────────────────────
+const uploadImage = (catId: string, file: File) => {
+  const form = new FormData();
+  form.append('image', file);
+  return api.post(`/cats/${catId}/upload-image`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+// ── Cat avatar with image upload ───────────────────────────────────────────────
+function CatAvatar({ cat, onUploaded }: { cat: Cat; onUploaded: () => void }) {
+  const { addToast } = useToast();
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await uploadImage(String(cat.id), file);
+      addToast(`${cat.name}'s photo updated`, 'success');
+      onUploaded();
+    } catch {
+      addToast('Upload failed', 'error');
+    }
+  }
+
+  return (
+    <label className="relative cursor-pointer group w-14 h-14 shrink-0">
+      {/* Avatar — real photo if uploaded, emoji fallback */}
+      <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-2xl">
+        {cat.profile_image_url ? (
+          <img
+            src={`${process.env.NEXT_PUBLIC_API_URL}${cat.profile_image_url}`}
+            alt={cat.name}
+            className="w-full h-full object-cover"
+          />
+        ) : '🐱'}
+      </div>
+
+      {/* Camera icon overlay on hover */}
+      <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-white text-sm">📷</span>
+      </div>
+
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+    </label>
+  );
+}
+
+// ── Enroll face modal ──────────────────────────────────────────────────────────
 function EnrollModal({ cat, onClose }: { cat: Cat; onClose: () => void }) {
-  const [files, setFiles]   = useState<File[]>([]);
+  const [files, setFiles]     = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError]   = useState<string | null>(null);
+  const [error, setError]     = useState<string | null>(null);
   const { addToast } = useToast();
 
   async function handleSubmit() {
@@ -40,7 +88,7 @@ function EnrollModal({ cat, onClose }: { cat: Cat; onClose: () => void }) {
       addToast(`${cat.name}'s face enrolled successfully!`, 'success');
       onClose();
     } catch {
-      setError('Enrollment failed. Make sure each photo clearly shows the cat\'s face.');
+      setError("Enrollment failed. Make sure each photo clearly shows the cat's face.");
     } finally {
       setLoading(false);
     }
@@ -112,11 +160,15 @@ function EnrollModal({ cat, onClose }: { cat: Cat; onClose: () => void }) {
 export default function CatsPage() {
   const qc = useQueryClient();
   const { addToast } = useToast();
-  const [showAdd, setShowAdd]         = useState(false);
-  const [enrollCat, setEnrollCat]     = useState<Cat | null>(null);
-  const [deletingId, setDeletingId]   = useState<string | null>(null);
 
-  const { data: cats = [], isLoading } = useQuery({ queryKey: ['cats'], queryFn: fetchCats });
+  const [showAdd, setShowAdd]       = useState(false);
+  const [enrollCat, setEnrollCat]   = useState<Cat | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const { data: cats = [], isLoading } = useQuery({
+    queryKey: ['cats'],
+    queryFn: fetchCats,
+  });
 
   const deleteM = useMutation({
     mutationFn: (id: string) => deleteCat(id),
@@ -130,30 +182,50 @@ export default function CatsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">My Cats</h1>
-          <p className="text-sm text-gray-500 mt-1">{cats.length} cat{cats.length !== 1 ? 's' : ''} registered</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {cats.length} cat{cats.length !== 1 ? 's' : ''} registered
+          </p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="btn-primary">+ Add Cat</button>
+        <button onClick={() => setShowAdd(true)} className="btn-primary">
+          + Add Cat
+        </button>
       </div>
 
+      {/* Empty state */}
       {cats.length === 0 ? (
         <div className="card text-center py-16">
           <p className="text-4xl mb-3">🐱</p>
           <p className="font-semibold text-gray-700">No cats yet</p>
-          <p className="text-sm text-gray-400 mt-1 mb-5">Add your first cat to start monitoring</p>
-          <button onClick={() => setShowAdd(true)} className="btn-primary">Add Cat</button>
+          <p className="text-sm text-gray-400 mt-1 mb-5">
+            Add your first cat to start monitoring
+          </p>
+          <button onClick={() => setShowAdd(true)} className="btn-primary">
+            Add Cat
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {cats.map((cat: Cat) => (
             <div key={cat.id} className="card flex flex-col gap-3">
-              <CatCard cat={cat} onEdit={() => {}} onDelete={() => {}} />
 
-              {/* Action buttons row */}
+              {/* Avatar + cat card in a row */}
+              <div className="flex items-start gap-3">
+                <CatAvatar
+                  cat={cat}
+                  onUploaded={() => qc.invalidateQueries({ queryKey: ['cats'] })}
+                />
+                <div className="flex-1 min-w-0">
+                  <CatCard cat={cat} onEdit={() => {}} onDelete={() => {}} />
+                </div>
+              </div>
+
+              {/* Action buttons */}
               <div className="flex gap-2 pt-2 border-t border-gray-100">
-                {/* Enroll Face — the new button */}
                 <button
                   onClick={() => setEnrollCat(cat)}
                   className="flex-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded-lg py-1.5 transition-colors"
@@ -174,13 +246,29 @@ export default function CatsPage() {
                   {deletingId === String(cat.id) ? 'Confirm delete?' : 'Delete'}
                 </button>
               </div>
+
             </div>
           ))}
         </div>
       )}
 
-      {showAdd  && <AddCatModal open={showAdd} onClose={() => { setShowAdd(false); qc.invalidateQueries({ queryKey: ['cats'] }); }} />}
-      {enrollCat && <EnrollModal cat={enrollCat} onClose={() => setEnrollCat(null)} />}
+      {/* Modals */}
+      {showAdd && (
+        <AddCatModal
+          open={showAdd}
+          onClose={() => {
+            setShowAdd(false);
+            qc.invalidateQueries({ queryKey: ['cats'] });
+          }}
+        />
+      )}
+      {enrollCat && (
+        <EnrollModal
+          cat={enrollCat}
+          onClose={() => setEnrollCat(null)}
+        />
+      )}
+
     </div>
   );
 }
