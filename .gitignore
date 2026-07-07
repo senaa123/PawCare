@@ -1,5 +1,6 @@
 # Enviroments
 .venv
+venv
 .tf_venv
 
 # Models training data
@@ -7,6 +8,8 @@ models/cat_activity/
 models/cat_det/
 models/cat_rec/
 models/cat_sound/
+models/training/
+
 
 #env
 .env

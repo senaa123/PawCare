@@ -2,7 +2,8 @@
 
 import logging
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Request
+from app.core.limiter import limiter
 
 from app.api.dependencies import CurrentUser, DBSession
 from app.ai.audio.inference import AudioInferenceService
@@ -14,7 +15,9 @@ ALLOWED_AUDIO_TYPES = (".wav", ".ogg", ".mp3")
 
 
 @router.post("/analyze")
+@limiter.limit("10/minute")
 async def analyze_audio(
+    request: Request,
     current_user: CurrentUser,   # ← FIXED: auth required
     session: DBSession,
     file: UploadFile = File(...),
