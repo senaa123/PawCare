@@ -1,5 +1,6 @@
-# app/main.py — FULL UPDATED FILE
+# app/main.py
 
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -24,6 +25,32 @@ configure_logging(debug=settings.DEBUG)
 logger = logging.getLogger(__name__)
 
 
+async def _session_sweep_loop() -> None:
+    """Background task: closes sessions for cats that have left the camera frame."""
+    from app.ai.behavior.session_tracker import session_tracker
+    while True:
+        await asyncio.sleep(30)
+        try:
+            await session_tracker.sweep_timeouts()
+        except Exception:
+            logger.exception("session_sweep_loop: unhandled error")
+
+
+async def _close_orphaned_sessions() -> None:
+    """Startup cleanup: close any sessions left open from the previous server run."""
+    try:
+        from app.database.connection import AsyncSessionLocal
+        from app.database.repositories.activity_session_repository import ActivitySessionRepository
+        async with AsyncSessionLocal() as db:
+            async with db.begin():
+                repo = ActivitySessionRepository(db)
+                count = await repo.close_orphaned_sessions()
+                if count:
+                    logger.info(f"Startup cleanup: closed {count} orphaned session(s)")
+    except Exception:
+        logger.exception("_close_orphaned_sessions: failed")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("PawCare backend starting up...")
@@ -33,6 +60,7 @@ async def lifespan(app: FastAPI):
     register_automation_handlers() # rules engine handlers
     start_scheduler()              # start the anomaly check scheduler
     yield
+
     logger.info("PawCare backend shutting down...")
     stop_scheduler()
     await event_bus.stop()

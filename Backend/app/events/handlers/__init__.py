@@ -1,4 +1,4 @@
-# app/events/handlers/__init__.py — FULL UPDATED FILE
+# app/events/handlers/__init__.py
 
 import logging
 
@@ -12,16 +12,20 @@ logger = logging.getLogger(__name__)
 
 
 def register_all_handlers() -> None:
-    # Anomaly → create DB alert
+    # Anomaly → persist Alert in DB
     event_bus.subscribe(EventType.ANOMALY_DETECTED, handle_anomaly_alert)
     event_bus.subscribe(EventType.ACTIVITY_UPDATED, handle_activity_updated)
 
-    # These all push to WebSocket dashboard
+    # CAT_DETECTED → open/close activity sessions
+    event_bus.subscribe(EventType.CAT_DETECTED, handle_activity_tracking)
+
+    # WebSocket broadcast — dashboard receives all of these in real time
     event_bus.subscribe(EventType.CAT_DETECTED,          handle_ws_broadcast)
     event_bus.subscribe(EventType.CAT_IDENTIFIED,        handle_ws_broadcast)
     event_bus.subscribe(EventType.VOCALIZATION_DETECTED, handle_ws_broadcast)
     event_bus.subscribe(EventType.ACTIVITY_UPDATED,      handle_ws_broadcast)
     event_bus.subscribe(EventType.ALERT_CREATED,         handle_ws_broadcast)
     event_bus.subscribe(EventType.ANOMALY_DETECTED,      handle_ws_broadcast)
+    event_bus.subscribe(EventType.ACTIVITY_UPDATED,      handle_ws_broadcast)  # ← NEW
 
     logger.info("All WebSocket + alert event handlers registered.")

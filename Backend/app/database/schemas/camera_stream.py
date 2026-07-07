@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
+from app.database.schemas.activity_session import ActivitySessionOut 
 
 
 # ─── CameraStream ────────────────────────────────────────────────────────────
@@ -49,15 +50,3 @@ class DetectionEventOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ─── ActivitySession ─────────────────────────────────────────────────────────
-
-class ActivitySessionOut(BaseModel):
-    id: uuid.UUID
-    cat_id: uuid.UUID
-    activity: str
-    started_at: datetime
-    ended_at: Optional[datetime]
-    duration_seconds: Optional[int]
-    created_at: datetime
-
-    model_config = {"from_attributes": True}
