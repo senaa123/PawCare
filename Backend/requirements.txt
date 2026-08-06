@@ -57,10 +57,12 @@ apscheduler==3.10.4
 structlog==24.1.0
 
 
-# ── AI — face enrollment only ──────────────────────────────────────────────────
+# ── AI — face enrollment + breed classification ────────────────────────────────
 opencv-python-headless==4.9.0.80
 Pillow==10.3.0
 numpy==1.26.4
+onnxruntime==1.18.0
+facenet-pytorch==2.6.0
 
 
 # ── Testing ────────────────────────────────────────────────────────────────────

@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 # ── Behavior model config — owned here, imported by main ──────────────────────
 _REPO_ROOT         = Path(__file__).resolve().parents[3]
 DEFAULT_MODEL_PATH = _REPO_ROOT / "Backend" / "app" / "ai" / "models" / "behavior_v1.pt"
-DEFAULT_CONFIDENCE = 0.3
+DEFAULT_CONFIDENCE = 0.55
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -52,10 +52,17 @@ class BehaviorModel:
         device:     str        = "0",
         conf:       float      = DEFAULT_CONFIDENCE,
     ):
+        import torch
         self.model_path = Path(model_path)
-        self.device     = device
-        self.conf       = conf
-        self._model     = None
+        if device != "cpu" and not torch.cuda.is_available():
+            logger.warning(
+                "CUDA device '%s' requested, but PyTorch CUDA is unavailable. Falling back to 'cpu'.",
+                device,
+            )
+            device = "cpu"
+        self.device = device
+        self.conf   = conf
+        self._model = None
 
     # ── Lifecycle ─────────────────────────────────────────────────────────────
 

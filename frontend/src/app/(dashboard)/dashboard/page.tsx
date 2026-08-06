@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Camera, Cat, Bell, Activity, Video, Plus } from "lucide-react";
 import Link from "next/link";
-import TopBar    from "@/components/shared/TopBar";
+import { TopBar }  from "@/components/shared/TopBar";
 import StatCard  from "@/components/dashboard/StatCard";
 import { catsApi, streamsApi } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";

@@ -75,19 +75,26 @@ class NotificationService:
         try:
             async with AsyncSessionLocal() as session:
                 async with session.begin():
-                    # ── Validate cat exists and belongs to this user ───────
-                    cat_result = await session.execute(
+                    target_cat = (await session.execute(
                         select(Cat).where(
                             Cat.id == cat_uuid,
                             Cat.owner_id == user_uuid,
                         )
-                    )
-                    if not cat_result.scalar_one_or_none():
-                        logger.warning(
-                            f"SEND_NOTIFICATION skipped — cat {cat_uuid} "
-                            f"not found or not owned by user {user_id}"
-                        )
-                        return
+                    )).scalar_one_or_none()
+
+                    if not target_cat:
+                        # Fall back to user's first registered cat if cat_id was missing/deleted
+                        user_cat = (await session.execute(
+                            select(Cat).where(Cat.owner_id == user_uuid).limit(1)
+                        )).scalar_one_or_none()
+
+                        if user_cat:
+                            cat_uuid = user_cat.id
+                        else:
+                            logger.warning(
+                                f"SEND_NOTIFICATION skipped — user {user_id} has no registered cats"
+                            )
+                            return
 
                     # ── Persist Alert ─────────────────────────────────────
                     alert = Alert(
