@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Fraunces + Inter already loaded from index.html ───────────────────────── */
+
+@layer base {
+  :root { scroll-behavior: smooth; }
+  body {
+    background-color: #FBF6ED;
+    color: #22201B;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+  h1, h2, h3, h4, h5, h6 { font-family: 'Fraunces', serif; }
+}
+
+/* ── Drag region for frameless titlebar ─────────────────────────────────────── */
+.drag-region  { -webkit-app-region: drag; }
+.no-drag      { -webkit-app-region: no-drag; }
+
+/* ── Card variants ─────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* White surface card */
+  .pc-card {
+    @apply bg-white rounded-xl border border-[#E8DFC8] shadow-card;
+  }
+
+  /* Lift on hover */
+  .pc-card-hover {
+    @apply pc-card transition-all duration-150;
+  }
+  .pc-card-hover:hover {
+    @apply shadow-cardHover -translate-y-0.5;
+  }
+
+  /* Primary button — marmalade orange */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-marmalade text-white font-semibold text-sm
+           px-5 py-2.5 rounded-[10px]
+           transition-all duration-150 active:scale-[0.97]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary:hover { background-color: #D67029; }
+
+  /* Secondary button — white with ink border */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-white text-ink border border-[#E8DFC8] font-medium text-sm
+           px-5 py-2.5 rounded-[10px]
+           transition-all duration-150;
+  }
+  .btn-secondary:hover { @apply bg-oat; }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           text-ink-muted font-medium text-sm
+           px-4 py-2 rounded-lg
+           transition-all duration-150;
+  }
+  .btn-ghost:hover { @apply bg-oat text-ink; }
+
+  /* Forest green solid button */
+  .btn-forest {
+    @apply inline-flex items-center justify-center gap-2
+           bg-forest text-white font-semibold text-sm
+           px-5 py-2.5 rounded-[10px]
+           transition-all duration-150 active:scale-[0.97];
+  }
+  .btn-forest:hover { background-color: #162B22; }
+
+  /* Input field */
+  .pc-input {
+    @apply w-full px-4 py-3 rounded-[10px]
+           border border-[#D6CDB4] bg-white text-ink text-sm
+           placeholder-ink-light
+           focus:outline-none focus:ring-2 focus:ring-marmalade/30 focus:border-marmalade
+           transition-all duration-150;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Nav item in sidebar */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg
+           text-[13px] font-medium text-white/75
+           transition-all duration-150 cursor-pointer;
+  }
+  .nav-item.active {
+    @apply text-white bg-white/[0.08];
+  }
+  .nav-item:hover:not(.active) {
+    @apply text-white/90 bg-white/[0.05];
+  }
+
+  /* Badge pill */
+  .pc-badge {
+    @apply inline-flex items-center gap-1.5
+           px-2.5 py-0.5 rounded-full
+           text-xs font-medium;
+  }
+
+  /* Hairline divider */
+  .pc-divider { @apply border-t border-[#E8DFC8]; }
+}
+
+/* ── Sine-wave panel divider (auth pages) ───────────────────────────────────── */
+.wave-divider {
+  position: absolute;
+  right: -1px;
+  top: 0;
+  height: 100%;
+  width: 60px;
+  overflow: visible;
+  z-index: 10;
+}
+
+/* ── Stagger animation helpers (use with style delay) ────────────────────────── */
+@keyframes slideUpIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: slideUpIn 0.32s ease-out forwards;
+}
+
+@keyframes countUp {
+  from { opacity: 0.3; }
+  to   { opacity: 1; }
+}
+
+/* ── Paw print pattern (left auth panel) ────────────────────────────────────── */
+.paw-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cellipse cx='20' cy='12' rx='5' ry='7' fill='white' opacity='0.08'/%3E%3Cellipse cx='38' cy='10' rx='4' ry='6' fill='white' opacity='0.08'/%3E%3Cellipse cx='10' cy='28' rx='4' ry='5.5' fill='white' opacity='0.08'/%3E%3Cellipse cx='46' cy='26' rx='4' ry='5.5' fill='white' opacity='0.08'/%3E%3Cellipse cx='28' cy='36' rx='11' ry='13' fill='white' opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 80px 80px;
+}
+
+/* ── Scrollbar styling ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D6CDB4; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #BFB49A; }
+
+/* ── prefers-reduced-motion ─────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

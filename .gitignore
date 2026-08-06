@@ -1,18 +1,59 @@
-# Enviroments
-.venv
-venv
-.tf_venv
+# ── Python & Virtual Environments ────────────────────────────────────────────────
+.venv/
+venv/
+*/venv/
+.tf_venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Models training data
+# ── Node.js & Desktop Electron App ──────────────────────────────────────────────
+node_modules/
+desktop/node_modules/
+desktop/out/
+desktop/dist/
+desktop/.vite/
+.vite/
+dist/
+out/
+
+# ── Environment & Secret Configurations ─────────────────────────────────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── Database & Upload Storage ───────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+Backend/pawcare.db
+Backend/app/ai/models/embeddings/*.npy
+storage/
+Backend/storage/
+
+# ── Model Training Checkpoints & Datasets ───────────────────────────────────────
 models/cat_activity/
 models/cat_det/
 models/cat_rec/
 models/cat_sound/
 models/training/
+*.ckpt
+*.pth.tar
+module/
 
+# ── IDEs, Editors & OS System Files ────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log
 
-#env
-.env
-
-#cache
-__pycache__/
+frontend/

@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import Sidebar from "@/components/shared/Sidebar";
+import { Sidebar } from "@/components/shared/Sidebar";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router       = useRouter();
